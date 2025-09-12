@@ -39,7 +39,7 @@ function newTextToNewJsonPathParams(newText: string, pathParameters: RequestPara
 
             return {
                 name: param[1],
-                value: activeTabPathParameters.find(p => p.name === param[1])?.value ?? '',
+                value: activeTabPathParameters.find(p => p.name === param[1])?.value ?? ''
             }
         })
         .filter(Boolean)
@@ -111,10 +111,16 @@ export function onUrlChange(activeTab: CollectionItem) {
     const newJsonPathParams = newTextToNewJsonPathParams(urlParamsSplit[0], activeTab.pathParameters)
 
     activeTab.parameters = updateJsonWithNewText(JSON.parse(JSON.stringify(activeTab.parameters)), newJsonQueryParams)
+    //todo: the variable newPathParameters has empty array if the there was one unused path param, however the variable newJsonPathParams already has an empty array
     const newPathParameters = updateJsonWithNewText(JSON.parse(JSON.stringify(activeTab.pathParameters)), newJsonPathParams)
-    const newPathParametersNames = newPathParameters.map(param => param.name)
+    const leftOutPathParameters = activeTab.pathParameters.filter(
+        param => !newPathParameters.some(newParam => newParam.name === param.name)
+    ).map(param => ({ ...param, disabled: true }))
+
+    const joinedNewPathParameters = [...newPathParameters, ...leftOutPathParameters]
+    const joinedNewPathParametersNames = joinedNewPathParameters.map(param => param.name)
     // remove duplicate path parameters before setting
-    activeTab.pathParameters = newPathParameters.filter((param, index) => newPathParametersNames.indexOf(param.name) === index)
+    activeTab.pathParameters = joinedNewPathParameters.filter((param, index) => joinedNewPathParametersNames.indexOf(param.name) === index)
 
     return true
 }
